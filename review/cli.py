@@ -1,15 +1,14 @@
 """CLI: review drafted applications for each 'scored' job.
 
-For every job with status='scored', drafts a resume diff + cover letter
-(reusing the same function mcp_server exposes as a tool), shows it, and lets
-you approve, edit, or skip. Approved/edited drafts are written to
-drafts/<job_id>/ and logged to application_tracker.csv; the job's DB status
-updates to 'reviewed' or 'rejected'. Nothing is ever sent automatically.
+For every job with status='scored', drafts a resume + cover letter (as both
+LaTeX/text sources and compiled PDFs, via review/actions.py), shows the
+summary, and lets you approve, edit, or skip. Approved/edited drafts are
+logged to application_tracker.csv; the job's DB status updates to 'reviewed'
+or 'rejected'. Nothing is ever sent automatically.
 """
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import tempfile
@@ -17,9 +16,7 @@ from pathlib import Path
 
 from db.models import Job
 from db.session import get_session
-from mcp_server.server import draft_tailored_resume, log_application
-
-DRAFTS_DIR = Path(__file__).resolve().parents[1] / "drafts"
+from review.actions import draft_dir_for, generate_draft, record_decision, update_cover_letter
 
 
 def _edit_text(text: str) -> str:
@@ -40,37 +37,27 @@ def _prompt_choice(prompt: str, choices: str) -> str:
             return answer
 
 
-def _finalize(job: Job, status: str, notes: str, draft: dict) -> None:
-    job_dir = DRAFTS_DIR / job.id.replace(":", "_")
-    job_dir.mkdir(parents=True, exist_ok=True)
-    (job_dir / "draft.json").write_text(json.dumps(draft, indent=2))
-    (job_dir / "cover_letter.txt").write_text(draft.get("cover_letter", ""))
-
-    log_application(job_id=job.id, status=status, notes=notes)
-
-    with get_session() as session:
-        db_job = session.get(Job, job.id)
-        db_job.status = status
-
-    print(f"-> {job.id}: {status}")
-
-
 def review_job(job: Job) -> None:
     print(f"\n{'=' * 70}\n{job.title} @ {job.company}  (score: {job.tech_match_score})\n{job.source_url}\n{'=' * 70}")
-    print("Drafting resume diff + cover letter...")
-    draft = json.loads(draft_tailored_resume(job.description, job.title, job.company))
+    print("Drafting resume + cover letter + PDFs...")
+    draft = generate_draft(job)
 
     if draft.get("skip_recommended"):
         print("\nModel recommends SKIPPING this job:")
         for note in draft.get("gap_notes", []):
             print(f"  - {note}")
         if _prompt_choice("Reject this job?", "yn") == "y":
-            _finalize(job, status="rejected", notes="skip_recommended by model", draft=draft)
+            record_decision(job.id, "rejected", "skip_recommended by model")
+            print(f"-> {job.id}: rejected")
         else:
             print(f"-> {job.id}: left as 'scored' (no draft generated) for manual follow-up")
         return
 
-    print("\n--- Resume diff ---")
+    if draft["pdf_error"]:
+        print(f"\n!! PDF compilation issue: {draft['pdf_error']}")
+        print("   (.tex/.txt sources were still saved — check drafts/ for details)")
+
+    print("\n--- Resume diff (summary) ---")
     for edit in draft["resume_diff"]:
         print(f"[{edit['section']}] {edit['change']}\n    why: {edit['reason']}")
     print("\n--- Cover letter ---")
@@ -80,14 +67,20 @@ def review_job(job: Job) -> None:
         for note in draft["gap_notes"]:
             print(f"  - {note}")
 
+    job_dir = draft_dir_for(job.id)
+    print(f"\nPDFs: {job_dir / 'resume.pdf'}, {job_dir / 'cover_letter.pdf'}")
+
     choice = _prompt_choice("\nApprove (a) / Edit (e) / Skip (s)?", "aes")
     if choice == "a":
-        _finalize(job, status="reviewed", notes="approved as drafted", draft=draft)
+        record_decision(job.id, "reviewed", "approved as drafted")
     elif choice == "e":
-        draft["cover_letter"] = _edit_text(draft["cover_letter"])
-        _finalize(job, status="reviewed", notes="approved with edits", draft=draft)
+        edited = _edit_text(draft["cover_letter"])
+        update_cover_letter(job, edited)
+        record_decision(job.id, "reviewed", "approved with edits")
     else:
-        _finalize(job, status="rejected", notes="skipped by user", draft=draft)
+        record_decision(job.id, "rejected", "skipped by user")
+
+    print(f"-> {job.id}: done")
 
 
 def main() -> None:

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Job Application Pipeline{% endblock %}</title>
+  <style>
+    :root { --accent: #1f4e79; --bg: #f7f7f8; --border: #ddd; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+      margin: 0; background: var(--bg); color: #222;
+    }
+    header {
+      background: var(--accent); color: white; padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header a { color: white; text-decoration: none; font-weight: 600; }
+    main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+    .card {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem; margin-bottom: 1rem;
+    }
+    .job-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.8rem 0; border-bottom: 1px solid var(--border);
+    }
+    .job-row:last-child { border-bottom: none; }
+    .job-row a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .job-row a:hover { text-decoration: underline; }
+    .badge {
+      display: inline-block; padding: 0.15rem 0.55rem; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600; margin-left: 0.4rem;
+    }
+    .badge.fetched { background: #eee; color: #555; }
+    .badge.scored { background: #fff3cd; color: #856404; }
+    .badge.reviewed { background: #d4edda; color: #155724; }
+    .badge.rejected { background: #f8d7da; color: #721c24; }
+    .badge.skip { background: #e2e3e5; color: #383d41; }
+    .tabs { margin-bottom: 1rem; }
+    .tabs a {
+      color: var(--accent); text-decoration: none; margin-right: 1.2rem;
+      padding-bottom: 0.3rem;
+    }
+    .tabs a.active { border-bottom: 2px solid var(--accent); font-weight: 600; }
+    .btn {
+      display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; border: none;
+      background: var(--accent); color: white; cursor: pointer; font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .btn.secondary { background: #6c757d; }
+    .btn.danger { background: #c0392b; }
+    .btn.small { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+    form.inline { display: inline; }
+    textarea, input[type=text], input[type=url] {
+      width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px;
+      font-family: inherit; font-size: 0.92rem;
+    }
+    label { font-weight: 600; display: block; margin: 0.8rem 0 0.3rem; }
+    .muted { color: #777; font-size: 0.88rem; }
+    .error-box { background: #f8d7da; color: #721c24; padding: 0.8rem; border-radius: 6px; margin: 0.8rem 0; }
+    pre { white-space: pre-wrap; font-family: inherit; }
+    .diff-item { border-left: 3px solid var(--accent); padding-left: 0.8rem; margin-bottom: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">Job Application Pipeline</a>
+    <a href="/generate">+ Generate for a job description</a>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

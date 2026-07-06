@@ -1,12 +1,16 @@
 \documentclass[11pt,a4paper]{article}
 
+% T1 + lmodern: outline (not bitmap) fonts with correct ligature-to-Unicode
+% mapping, so ATS text extraction doesn't mangle "fi"/"fl" etc.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
 \usepackage[margin=0.85in]{geometry}
 \usepackage{xcolor}
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{hyperref}
-\usepackage{tabularx}
-\usepackage{array}
 
 \definecolor{accent}{RGB}{31,78,121}
 
@@ -17,9 +21,12 @@
 
 \setlist[itemize]{leftmargin=1.4em, itemsep=1pt, topsep=2pt}
 
+% Deliberately not using \hfill for right-aligned dates: glue-based spacing
+% emits no literal space character, so ATS text extraction often concatenates
+% title+date with no space at all (e.g. "SystemsJune 2025"). One line with
+% real inline separators extracts reliably instead.
 \newcommand{\role}[4]{%
-  \noindent\textbf{#1} \hfill \textit{#3}\\
-  \textit{#2} \hfill #4\\[0.2em]
+  \noindent\textbf{#1} --- \textit{#2}, #4 (#3)\\[0.2em]
 }
 
 \pagestyle{empty}
@@ -28,7 +35,7 @@
 
 \begin{center}
   {\Huge \textbf{Rohith Kumar Seetha}}\\[0.3em]
-  {\large Senior Full Stack Engineer \;|\; TypeScript \(\bullet\) Node.js \(\bullet\) React \(\bullet\) AWS}\\[0.3em]
+  {\large Senior Full Stack Engineer \;|\; TypeScript \;|\; Node.js \;|\; React \;|\; AWS}\\[0.3em]
   Melbourne, Australia \;|\; \href{mailto:rohithseetha@gmail.com}{rohithseetha@gmail.com} \;|\; +61 401 415 174\\
   \href{https://linkedin.com/in/rohith-seetha-8272b11b}{linkedin.com/in/rohith-seetha-8272b11b} \;|\;
   \href{https://github.com/rohithseetha}{github.com/rohithseetha}\\[0.3em]
@@ -46,20 +53,21 @@ adapting OpenAPI specs into agent tool definitions, multi-vendor model integrati
 orchestration. Australian PR (Subclass 190), open to Sydney relocation, available immediately.
 
 \section*{Technical Skills}
-\begin{tabularx}{\linewidth}{@{}l X@{}}
-  \textbf{Languages} & TypeScript, JavaScript, Node.js, Python, Java (Spring Boot), SQL \\
-  \textbf{Frontend} & React (functional components, hooks, state management), Next.js, responsive design, CSS \\
-  \textbf{Backend \& APIs} & Node.js (Express), Python (FastAPI), REST \& GraphQL, OpenAPI / contract-first design, API security, microservices \\
-  \textbf{Agentic AI \& LLMs} & LLM agents, agent orchestration, multi-vendor model integration, system-prompt design, OpenAPI specs adapted into agent tool definitions, Azure AI Foundry, Anthropic Claude API, Model Context Protocol (MCP) \\
-  \textbf{Agent Frameworks} & LangChain / LangGraph --- exploratory, actively deepening; orchestration patterns transferable from Azure AI Foundry agent work \\
-  \textbf{AWS Cloud} & Lambda (serverless), ECS (containers), RDS, DynamoDB, S3, EC2, IAM, VPC, CloudWatch \\
-  \textbf{Architecture} & Scalable system design, distributed \& event-driven systems (Kafka), design patterns, performance optimisation \\
-  \textbf{Security} & OAuth2, OIDC, JWT, RBAC, Azure AD, application \& cloud security \\
-  \textbf{DevOps \& Delivery} & CI/CD pipelines, Docker, Kubernetes, GitOps, observability (Datadog, Sentry, OpenSearch) \\
-  \textbf{Databases} & PostgreSQL, MySQL, MongoDB, DynamoDB, schema design, migrations \\
-  \textbf{Leadership} & Mentoring, code review, architectural decisions, stakeholder engagement, technical design \\
-  \textbf{AI-Assisted Engineering} & Claude Code (daily), Anthropic Claude API, GitHub Copilot, LLM agents over enterprise APIs, Azure AI Foundry \\
-\end{tabularx}
+% Flowing text, not a table — real tables in a PDF can extract out of
+% reading order in ATS parsers. One category per line via manual \\ breaks.
+\noindent
+\textbf{Languages:} TypeScript, JavaScript, Node.js, Python, Java (Spring Boot), SQL\\
+\textbf{Frontend:} React (functional components, hooks, state management), Next.js, responsive design, CSS\\
+\textbf{Backend \& APIs:} Node.js (Express), Python (FastAPI), REST \& GraphQL, OpenAPI / contract-first design, API security, microservices\\
+\textbf{Agentic AI \& LLMs:} LLM agents, agent orchestration, multi-vendor model integration, system-prompt design, OpenAPI specs adapted into agent tool definitions, Azure AI Foundry, Anthropic Claude API, Model Context Protocol (MCP)\\
+\textbf{Agent Frameworks:} LangChain / LangGraph --- exploratory, actively deepening; orchestration patterns transferable from Azure AI Foundry agent work\\
+\textbf{AWS Cloud:} Lambda (serverless), ECS (containers), RDS, DynamoDB, S3, EC2, IAM, VPC, CloudWatch\\
+\textbf{Architecture:} Scalable system design, distributed \& event-driven systems (Kafka), design patterns, performance optimisation\\
+\textbf{Security:} OAuth2, OIDC, JWT, RBAC, Azure AD, application \& cloud security\\
+\textbf{DevOps \& Delivery:} CI/CD pipelines, Docker, Kubernetes, GitOps, observability (Datadog, Sentry, OpenSearch)\\
+\textbf{Databases:} PostgreSQL, MySQL, MongoDB, DynamoDB, schema design, migrations\\
+\textbf{Leadership:} Mentoring, code review, architectural decisions, stakeholder engagement, technical design\\
+\textbf{AI-Assisted Engineering:} Claude Code (daily), Anthropic Claude API, GitHub Copilot, LLM agents over enterprise APIs, Azure AI Foundry
 
 \section*{Professional Experience}
 

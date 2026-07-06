@@ -28,6 +28,9 @@ file wins.
 ## Cover letter style
 - ~200 words.
 - Conversational tone, contractions allowed, no em-dashes.
+- Body paragraphs ONLY — no "Dear Hiring Team," greeting and no "Sincerely,"
+  signoff. The PDF template (`pdfgen/render.py`) supplies both automatically;
+  including them in `cover_letter` would duplicate them in the rendered PDF.
 - Include at least one specific technical example relevant to the JD, not
   generic claims.
 - Include one honest gap paragraph if the JD asks for something not actually
@@ -35,8 +38,11 @@ file wins.
   otherwise state the gap plainly.
 
 ## Resume diff rules
-- Never rewrite the whole resume — only propose section-level edits (bullet
-  reordering, emphasis shifts, added/removed lines) against the master.
-- Preserve the master's accent color and LaTeX styling conventions.
-- Any bullet that would violate a constraint above must be flagged in
-  `gap_notes`, not silently adjusted to sound closer to the JD.
+- `tailored_resume_tex` is the actual compilable output: return the ENTIRE
+  master resume document, edited — same preamble, macros, and accent color,
+  only content (summary, bullet order/emphasis, skill lines) changed to fit
+  the JD. Never rewrite the structure or introduce new packages/macros.
+- `resume_diff` is a separate, short human-readable summary of what changed
+  and why — for the reviewer, not for compiling.
+- Any change that would violate a constraint above must be flagged in
+  `gap_notes`, not silently written into `tailored_resume_tex` anyway.

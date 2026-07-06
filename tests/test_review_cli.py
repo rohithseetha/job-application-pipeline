@@ -1,21 +1,22 @@
-import json
-from contextlib import contextmanager
-
 from db.models import Job
 from review import cli
 
 APPROVED_DRAFT = {
     "resume_diff": [{"section": "Summary", "change": "Lead with RAG work", "reason": "JD asks for LLM experience"}],
+    "tailored_resume_tex": "\\documentclass{article}\\begin{document}x\\end{document}",
     "cover_letter": "Original cover letter.",
     "gap_notes": [],
     "skip_recommended": False,
+    "pdf_error": None,
 }
 
 SKIP_DRAFT = {
     "resume_diff": [],
+    "tailored_resume_tex": "",
     "cover_letter": "",
     "gap_notes": ["Role requires NV1 clearance Rohith does not hold."],
     "skip_recommended": True,
+    "pdf_error": None,
 }
 
 
@@ -35,59 +36,79 @@ def _make_job(**overrides) -> Job:
     return Job(**defaults)
 
 
-def test_approve_writes_draft_and_logs(tmp_path, monkeypatch, db_session):
-    monkeypatch.setattr(cli, "DRAFTS_DIR", tmp_path)
-    monkeypatch.setattr(cli, "draft_tailored_resume", lambda *a, **kw: json.dumps(APPROVED_DRAFT))
+def test_approve_records_decision(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "generate_draft", lambda job: dict(APPROVED_DRAFT))
+    monkeypatch.setattr(cli, "draft_dir_for", lambda job_id: tmp_path)
     monkeypatch.setattr("builtins.input", lambda _: "a")
 
-    logged = {}
-    monkeypatch.setattr(cli, "log_application", lambda job_id, status, notes: logged.update(job_id=job_id, status=status))
+    recorded = {}
+    monkeypatch.setattr(
+        cli, "record_decision", lambda job_id, status, notes: recorded.update(job_id=job_id, status=status, notes=notes)
+    )
 
-    job = _make_job()
-    db_session.add(job)
-    db_session.commit()
-    monkeypatch.setattr(cli, "get_session", lambda: _session_ctx(db_session))
+    cli.review_job(_make_job())
 
-    cli.review_job(job)
-
-    assert logged == {"job_id": "adzuna:1", "status": "reviewed"}
-    assert (tmp_path / "adzuna_1" / "cover_letter.txt").read_text() == "Original cover letter."
-    assert db_session.get(Job, "adzuna:1").status == "reviewed"
+    assert recorded == {"job_id": "adzuna:1", "status": "reviewed", "notes": "approved as drafted"}
 
 
-def test_skip_recommended_and_user_confirms_rejects(tmp_path, monkeypatch, db_session):
-    monkeypatch.setattr(cli, "DRAFTS_DIR", tmp_path)
-    monkeypatch.setattr(cli, "draft_tailored_resume", lambda *a, **kw: json.dumps(SKIP_DRAFT))
+def test_edit_updates_cover_letter_then_records_decision(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "generate_draft", lambda job: dict(APPROVED_DRAFT))
+    monkeypatch.setattr(cli, "draft_dir_for", lambda job_id: tmp_path)
+    monkeypatch.setattr("builtins.input", lambda _: "e")
+    monkeypatch.setattr(cli, "_edit_text", lambda text: "Edited cover letter.")
+
+    updated = {}
+    monkeypatch.setattr(cli, "update_cover_letter", lambda job, text: updated.update(job_id=job.id, text=text))
+    recorded = {}
+    monkeypatch.setattr(
+        cli, "record_decision", lambda job_id, status, notes: recorded.update(job_id=job_id, status=status, notes=notes)
+    )
+
+    cli.review_job(_make_job())
+
+    assert updated == {"job_id": "adzuna:1", "text": "Edited cover letter."}
+    assert recorded["status"] == "reviewed"
+    assert recorded["notes"] == "approved with edits"
+
+
+def test_skip_records_rejected(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "generate_draft", lambda job: dict(APPROVED_DRAFT))
+    monkeypatch.setattr(cli, "draft_dir_for", lambda job_id: tmp_path)
+    monkeypatch.setattr("builtins.input", lambda _: "s")
+
+    recorded = {}
+    monkeypatch.setattr(
+        cli, "record_decision", lambda job_id, status, notes: recorded.update(job_id=job_id, status=status, notes=notes)
+    )
+
+    cli.review_job(_make_job())
+
+    assert recorded == {"job_id": "adzuna:1", "status": "rejected", "notes": "skipped by user"}
+
+
+def test_skip_recommended_and_user_confirms_rejects(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "generate_draft", lambda job: dict(SKIP_DRAFT))
+    monkeypatch.setattr(cli, "draft_dir_for", lambda job_id: tmp_path)
     monkeypatch.setattr("builtins.input", lambda _: "y")
 
-    logged = {}
-    monkeypatch.setattr(cli, "log_application", lambda job_id, status, notes: logged.update(status=status))
+    recorded = {}
+    monkeypatch.setattr(
+        cli, "record_decision", lambda job_id, status, notes: recorded.update(job_id=job_id, status=status, notes=notes)
+    )
 
-    job = _make_job(id="adzuna:2")
-    db_session.add(job)
-    db_session.commit()
-    monkeypatch.setattr(cli, "get_session", lambda: _session_ctx(db_session))
+    cli.review_job(_make_job(id="adzuna:2"))
 
-    cli.review_job(job)
-
-    assert logged["status"] == "rejected"
-    assert db_session.get(Job, "adzuna:2").status == "rejected"
+    assert recorded == {"job_id": "adzuna:2", "status": "rejected", "notes": "skip_recommended by model"}
 
 
-def test_skip_recommended_and_user_declines_leaves_scored(tmp_path, monkeypatch, db_session):
-    monkeypatch.setattr(cli, "DRAFTS_DIR", tmp_path)
-    monkeypatch.setattr(cli, "draft_tailored_resume", lambda *a, **kw: json.dumps(SKIP_DRAFT))
+def test_skip_recommended_and_user_declines_leaves_scored(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "generate_draft", lambda job: dict(SKIP_DRAFT))
+    monkeypatch.setattr(cli, "draft_dir_for", lambda job_id: tmp_path)
     monkeypatch.setattr("builtins.input", lambda _: "n")
 
-    job = _make_job(id="adzuna:3")
-    db_session.add(job)
-    db_session.commit()
+    called = []
+    monkeypatch.setattr(cli, "record_decision", lambda *a, **kw: called.append((a, kw)))
 
-    cli.review_job(job)
+    cli.review_job(_make_job(id="adzuna:3"))
 
-    assert db_session.get(Job, "adzuna:3").status == "scored"
-
-
-@contextmanager
-def _session_ctx(session):
-    yield session
+    assert called == []

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Jobs — Job Application Pipeline{% endblock %}
+{% block content %}
+
+<div class="tabs">
+  <a href="/?status=scored" class="{{ 'active' if current_status == 'scored' else '' }}">Scored ({{ counts.scored or 0 }})</a>
+  <a href="/?status=reviewed" class="{{ 'active' if current_status == 'reviewed' else '' }}">Reviewed ({{ counts.reviewed or 0 }})</a>
+  <a href="/?status=rejected" class="{{ 'active' if current_status == 'rejected' else '' }}">Rejected ({{ counts.rejected or 0 }})</a>
+  <a href="/?status=skip" class="{{ 'active' if current_status == 'skip' else '' }}">Skip ({{ counts.skip or 0 }})</a>
+  <a href="/?status=fetched" class="{{ 'active' if current_status == 'fetched' else '' }}">Fetched ({{ counts.fetched or 0 }})</a>
+  <a href="/?status=all" class="{{ 'active' if current_status == 'all' else '' }}">All</a>
+</div>
+
+<div class="card">
+  {% if jobs %}
+    {% for job in jobs %}
+    <div class="job-row">
+      <div>
+        <a href="/jobs/{{ job.id }}">{{ job.title }}</a> @ {{ job.company }}
+        <span class="badge {{ job.status }}">{{ job.status }}</span>
+        {% if job.tech_match_score is not none %}
+          <span class="muted">score {{ "%.1f"|format(job.tech_match_score) }}</span>
+        {% endif %}
+      </div>
+      <div class="muted">{{ job.location or "" }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="muted">No jobs with this status.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

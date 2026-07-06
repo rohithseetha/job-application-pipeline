@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} — Job Application Pipeline{% endblock %}
+{% block content %}
+
+<p><a href="/">&larr; back to job list</a></p>
+
+<div class="card">
+  <h2 style="margin-top:0">{{ job.title }} <span class="badge {{ job.status }}">{{ job.status }}</span></h2>
+  <p><strong>{{ job.company }}</strong> &mdash; {{ job.location or "location unknown" }}</p>
+  {% if job.source_url %}<p><a href="{{ job.source_url }}" target="_blank">{{ job.source_url }}</a></p>{% endif %}
+  <p class="muted">
+    {% if job.tech_match_score is not none %}score: {{ "%.1f"|format(job.tech_match_score) }} &middot; {% endif %}
+    {% if job.requires_citizenship %}<span class="badge rejected">requires citizenship</span>{% endif %}
+    {% if job.requires_clearance %}<span class="badge rejected">requires clearance</span>{% endif %}
+  </p>
+  <details>
+    <summary>Job description</summary>
+    <pre>{{ job.description }}</pre>
+  </details>
+</div>
+
+{% if not draft %}
+
+<div class="card">
+  <p>No draft generated yet for this job.</p>
+  <form method="post" action="/jobs/{{ job.id }}/generate">
+    <button class="btn" type="submit">Generate resume + cover letter</button>
+  </form>
+</div>
+
+{% else %}
+
+{% if draft.pdf_error %}
+<div class="error-box">
+  <strong>PDF compilation issue:</strong> {{ draft.pdf_error }}<br>
+  <span class="muted">The LaTeX/text sources were still saved — see drafts/{{ job_dir_name }}/ — but a PDF may be missing.</span>
+</div>
+{% endif %}
+
+{% if draft.skip_recommended %}
+<div class="card">
+  <h3>Model recommends skipping this job</h3>
+  <ul>
+    {% for note in draft.gap_notes %}<li>{{ note }}</li>{% endfor %}
+  </ul>
+  <form method="post" action="/jobs/{{ job.id }}/decision" class="inline">
+    <input type="hidden" name="status" value="rejected">
+    <input type="hidden" name="notes" value="skip_recommended by model">
+    <button class="btn danger" type="submit">Reject</button>
+  </form>
+  <form method="post" action="/jobs/{{ job.id }}/generate" class="inline">
+    <button class="btn secondary" type="submit">Regenerate anyway</button>
+  </form>
+</div>
+{% else %}
+
+<div class="card">
+  <h3>Resume diff (summary)</h3>
+  {% for edit in draft.resume_diff %}
+  <div class="diff-item">
+    <strong>[{{ edit.section }}]</strong> {{ edit.change }}<br>
+    <span class="muted">why: {{ edit.reason }}</span>
+  </div>
+  {% endfor %}
+  <p>
+    <a class="btn small" href="/jobs/{{ job.id }}/resume.pdf" target="_blank">Download resume PDF</a>
+  </p>
+</div>
+
+<div class="card">
+  <h3>Cover letter</h3>
+  <form method="post" action="/jobs/{{ job.id }}/cover-letter">
+    <textarea name="cover_letter" rows="10">{{ draft.cover_letter }}</textarea>
+    <p><button class="btn small" type="submit">Save edits &amp; recompile PDF</button></p>
+  </form>
+  <p>
+    <a class="btn small" href="/jobs/{{ job.id }}/cover-letter.pdf" target="_blank">Download cover letter PDF</a>
+  </p>
+</div>
+
+{% if draft.gap_notes %}
+<div class="card">
+  <h3>Gap notes</h3>
+  <ul>{% for note in draft.gap_notes %}<li>{{ note }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/jobs/{{ job.id }}/decision" class="inline">
+    <input type="hidden" name="status" value="reviewed">
+    <input type="hidden" name="notes" value="approved via dashboard">
+    <button class="btn" type="submit">Approve</button>
+  </form>
+  <form method="post" action="/jobs/{{ job.id }}/decision" class="inline">
+    <input type="hidden" name="status" value="rejected">
+    <input type="hidden" name="notes" value="rejected via dashboard">
+    <button class="btn danger" type="submit">Reject</button>
+  </form>
+  <form method="post" action="/jobs/{{ job.id }}/generate" class="inline">
+    <button class="btn secondary" type="submit">Regenerate draft</button>
+  </form>
+</div>
+
+{% endif %}
+{% endif %}
+
+{% endblock %}

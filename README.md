@@ -1,13 +1,18 @@
 # Job Application Pipeline
 
 Fetch job postings, score them against your profile, draft a tailored resume
-diff + cover letter with Claude, review everything yourself, then log the
-outcome. No auto-submission — you click send.
++ cover letter (as real PDFs) with an LLM, review everything yourself — via
+CLI or a web dashboard — then log the outcome. No auto-submission — you
+click send.
 
 ## Pipeline
 
 ```
-fetcher/  -> db (jobs table) -> scorer/ -> mcp_server/ (Claude drafts) -> review/ (CLI) -> application_tracker.csv
+fetcher/ -> db (jobs table) -> scorer/ -> mcp_server/ (LLM drafts) -> pdfgen/ (LaTeX -> PDF)
+                                                                          |
+                                              review/cli.py  <-or->  dashboard/app.py
+                                                                          |
+                                                              application_tracker.csv
 ```
 
 ## Setup
@@ -16,9 +21,22 @@ fetcher/  -> db (jobs table) -> scorer/ -> mcp_server/ (Claude drafts) -> review
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-cp .env.example .env   # fill in ADZUNA_APP_ID / ADZUNA_APP_KEY / ANTHROPIC_API_KEY
+cp .env.example .env   # fill in ADZUNA_APP_ID / ADZUNA_APP_KEY / GEMINI_API_KEY
 alembic upgrade head   # creates jobs.db with the jobs table
 ```
+
+**PDF generation needs a LaTeX engine.** On macOS:
+
+```bash
+brew install --cask basictex
+eval "$(/usr/libexec/path_helper)"   # or restart your terminal
+sudo tlmgr update --self
+sudo tlmgr install titlesec enumitem hyperref
+```
+
+Without this, everything else still works — the fetcher, scorer, drafting,
+and review flow all run fine; only PDF compilation is skipped, and you still
+get the `.tex`/`.txt` sources in `drafts/<job_id>/` to compile yourself.
 
 ## Stage 1 — Fetch
 
@@ -55,15 +73,34 @@ Scores every job with `status=fetched`, updating `requires_citizenship`,
 
 - `draft_tailored_resume(job_description, job_title, company)` — loads
   `mcp_server/resources/master_resume.tex` and `honesty_flags.md` as system
-  context, calls Claude (`claude-opus-4-8`) with a JSON schema output config,
-  and returns a resume diff + ~200-word cover letter + gap notes.
+  context, calls an LLM with a JSON schema output config, and returns a full
+  compilable tailored resume LaTeX document, a short human-readable
+  resume-diff summary (for review, not compiling), a ~200-word cover letter
+  body, and gap notes.
 - `log_application(job_id, status, notes)` — appends a row to
   `application_tracker.csv`.
 
-Honesty constraints (what Claude may and may not claim) live in
+**Provider is selectable** via `LLM_PROVIDER` in `.env` — both code paths are
+fully implemented:
+
+| `LLM_PROVIDER` | Default model | Notes |
+| --- | --- | --- |
+| `gemini` (default) | `gemini-2.5-flash` | Genuine free tier — get a key at https://aistudio.google.com/apikey, no billing account needed |
+| `anthropic` | `claude-haiku-4-5` | Needs API credit balance at console.anthropic.com; bump to `claude-opus-4-8` via `ANTHROPIC_MODEL` for better quality |
+
+Honesty constraints (what the model may and may not claim) live in
 `mcp_server/resources/honesty_flags.md`, mirrored as a Claude Code project
 skill at `.claude/skills/tailor-application/SKILL.md` for interactive use in
 this repo.
+
+**Self-healing LaTeX retry:** LLMs occasionally drop a backslash when
+JSON-escaping heavy LaTeX content, which breaks compilation. `review/actions.py`
+retries up to 3 times, using pdflatex's own reported line number to ask the
+model to fix just that one line (not regenerate the whole document, which
+risks introducing new errors elsewhere). This is not bulletproof — free/cheap
+models occasionally still fail after all retries — but it resolves most
+single-typo cases. On failure the `.tex`/`.txt` sources are still saved so you
+can fix and compile manually.
 
 Run the server standalone (stdio transport, for an MCP client like Claude
 Desktop or Claude Code):
@@ -72,25 +109,48 @@ Desktop or Claude Code):
 python -m mcp_server.server
 ```
 
-The `review` CLI (below) also imports `draft_tailored_resume` directly and
-calls it in-process — you don't need the server running just to review jobs.
+Both `review/cli.py` and `dashboard/app.py` import `draft_tailored_resume`
+directly and call it in-process — you don't need the server running for
+either.
 
 ## Stage 4 — Review
+
+Two ways to review — pick whichever fits:
+
+### CLI
 
 ```bash
 python -m review.cli
 ```
 
-For every job with `status=scored`: drafts a resume diff + cover letter,
-shows them, and prompts **Approve / Edit / Skip**. Approved (or edited)
-drafts are written to `drafts/<job_id>/` (`draft.json` + `cover_letter.txt`)
-for you to actually use when sending, logged to `application_tracker.csv`,
-and the job's DB status updates to `reviewed` or `rejected`. If Claude
+Goes through every job with `status=scored` in one interactive terminal
+session: drafts a resume + cover letter (compiling both to PDF), shows a
+summary, and prompts **Approve / Edit / Skip**.
+
+### Dashboard
+
+```bash
+uvicorn dashboard.app:app --reload
+```
+
+Open http://127.0.0.1:8000. Lets you:
+- Browse jobs by status (Scored / Reviewed / Rejected / Skip / Fetched)
+- Generate a draft for any job, one at a time, and preview/download the
+  resume and cover letter PDFs before deciding
+- Edit the cover letter text inline and recompile its PDF
+- Approve / Reject with one click
+- **"+ Generate for a job description"** — paste any job title/company/
+  description that never went through the fetcher (e.g. from LinkedIn) and
+  get a tailored resume + cover letter for it, same as any fetched job
+
+Both surfaces write to the same place: approved/edited drafts land in
+`drafts/<job_id>/` (`draft.json`, `tailored_resume.tex`, `cover_letter.txt`,
+`resume.pdf`, `cover_letter.pdf`), get logged to `application_tracker.csv`,
+and update the job's DB status to `reviewed` or `rejected`. If the model
 recommends skipping (citizenship/clearance mismatch it caught independently
 of the scorer), you confirm before it's marked `rejected`.
 
-Nothing is ever sent automatically — you take the reviewed draft and apply
-yourself.
+Nothing is ever sent automatically — you take the PDFs and apply yourself.
 
 ## Tests
 
@@ -98,6 +158,10 @@ yourself.
 pytest
 ```
 
-Covers the fetcher normalizer/upsert, the scorer's keyword matching and
-skip logic, and the review CLI's approve/edit/skip flow (Claude calls and
-the tracker are mocked — no API key or network needed to run tests).
+Covers the fetcher normalizer/upsert, the scorer's keyword matching and skip
+logic, `pdfgen`'s LaTeX escaping and compilation (skipped automatically if no
+LaTeX engine is installed), the review CLI and dashboard's approve/edit/skip
+flows, and mcp_server's provider routing. All LLM calls, PDF compilation, and
+the tracker are mocked in the flow tests — no API key, network, or LaTeX
+install needed to run the suite (only `test_pdfgen.py`'s compilation tests
+need pdflatex, and those self-skip without it).

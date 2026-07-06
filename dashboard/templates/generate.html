@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Generate for a job description — Job Application Pipeline{% endblock %}
+{% block content %}
+
+<p><a href="/">&larr; back to job list</a></p>
+
+<div class="card">
+  <h2 style="margin-top:0">Generate a tailored resume + cover letter</h2>
+  <p class="muted">Paste any job description — it doesn't need to be one already fetched.</p>
+  <form method="post" action="/generate">
+    <label>Job title</label>
+    <input type="text" name="title" required>
+
+    <label>Company</label>
+    <input type="text" name="company" required>
+
+    <label>Location (optional)</label>
+    <input type="text" name="location">
+
+    <label>Job description</label>
+    <textarea name="description" rows="12" required></textarea>
+
+    <p><button class="btn" type="submit">Create &amp; generate</button></p>
+  </form>
+</div>
+
+{% endblock %}
