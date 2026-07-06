@@ -1,0 +1,134 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{array}
+
+\definecolor{accent}{RGB}{31,78,121}
+
+\hypersetup{colorlinks=true, urlcolor=accent, linkcolor=accent}
+
+\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{}[\vspace{-0.6em}\color{accent}\hrule\vspace{0.4em}]
+\titlespacing{\section}{0pt}{1.2em}{0.4em}
+
+\setlist[itemize]{leftmargin=1.4em, itemsep=1pt, topsep=2pt}
+
+\newcommand{\role}[4]{%
+  \noindent\textbf{#1} \hfill \textit{#3}\\
+  \textit{#2} \hfill #4\\[0.2em]
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+  {\Huge \textbf{Rohith Kumar Seetha}}\\[0.3em]
+  {\large Senior Full Stack Engineer \;|\; TypeScript \(\bullet\) Node.js \(\bullet\) React \(\bullet\) AWS}\\[0.3em]
+  Melbourne, Australia \;|\; \href{mailto:rohithseetha@gmail.com}{rohithseetha@gmail.com} \;|\; +61 401 415 174\\
+  \href{https://linkedin.com/in/rohith-seetha-8272b11b}{linkedin.com/in/rohith-seetha-8272b11b} \;|\;
+  \href{https://github.com/rohithseetha}{github.com/rohithseetha}\\[0.3em]
+  \textbf{\color{accent}Australian Permanent Resident (Subclass 190) --- Open to Sydney relocation --- Available Immediately}
+\end{center}
+
+\section*{Professional Summary}
+Senior full stack engineer with 14+ years building scalable, customer-facing applications at large scale. Strong
+commercial depth across TypeScript, Node.js, React, and AWS, with a track record of designing scalable systems and
+APIs, driving architectural decisions and engineering best practices, and mentoring engineers to uplift team
+capability. Comfortable operating across architecture, hands-on delivery, and stakeholder engagement in
+fast-moving, product-led environments. Also an AI-native engineer --- daily Claude Code user who has shipped
+production LLM agents over enterprise APIs (Azure AI Foundry), with hands-on work in system-prompt design,
+adapting OpenAPI specs into agent tool definitions, multi-vendor model integration, and multi-step agent
+orchestration. Australian PR (Subclass 190), open to Sydney relocation, available immediately.
+
+\section*{Technical Skills}
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+  \textbf{Languages} & TypeScript, JavaScript, Node.js, Python, Java (Spring Boot), SQL \\
+  \textbf{Frontend} & React (functional components, hooks, state management), Next.js, responsive design, CSS \\
+  \textbf{Backend \& APIs} & Node.js (Express), Python (FastAPI), REST \& GraphQL, OpenAPI / contract-first design, API security, microservices \\
+  \textbf{Agentic AI \& LLMs} & LLM agents, agent orchestration, multi-vendor model integration, system-prompt design, OpenAPI specs adapted into agent tool definitions, Azure AI Foundry, Anthropic Claude API, Model Context Protocol (MCP) \\
+  \textbf{Agent Frameworks} & LangChain / LangGraph --- exploratory, actively deepening; orchestration patterns transferable from Azure AI Foundry agent work \\
+  \textbf{AWS Cloud} & Lambda (serverless), ECS (containers), RDS, DynamoDB, S3, EC2, IAM, VPC, CloudWatch \\
+  \textbf{Architecture} & Scalable system design, distributed \& event-driven systems (Kafka), design patterns, performance optimisation \\
+  \textbf{Security} & OAuth2, OIDC, JWT, RBAC, Azure AD, application \& cloud security \\
+  \textbf{DevOps \& Delivery} & CI/CD pipelines, Docker, Kubernetes, GitOps, observability (Datadog, Sentry, OpenSearch) \\
+  \textbf{Databases} & PostgreSQL, MySQL, MongoDB, DynamoDB, schema design, migrations \\
+  \textbf{Leadership} & Mentoring, code review, architectural decisions, stakeholder engagement, technical design \\
+  \textbf{AI-Assisted Engineering} & Claude Code (daily), Anthropic Claude API, GitHub Copilot, LLM agents over enterprise APIs, Azure AI Foundry \\
+\end{tabularx}
+
+\section*{Professional Experience}
+
+\role{Senior Full Stack Engineer --- AI, Blockchain \& Distributed Systems}{Ericsson}{June 2025 -- April 2026}{Stockholm, Sweden}
+\begin{itemize}
+  \item Built TypeScript / Node.js and Python (FastAPI) backend services, microservices, and React frontends on AWS and Azure.
+  \item Designed scalable REST and GraphQL APIs consumed by 50+ engineers --- schema-first, versioned, secured with OAuth2 / OIDC, with strong backward-compatibility guarantees.
+  \item Drove architectural decisions and engineering best practices; contributed to technical design and API definition across platform teams.
+  \item Built Kafka-based event-driven services processing high-throughput data flows across distributed components.
+  \item Containerised services with Docker / Kubernetes and delivered through CI/CD pipelines with unit and integration testing.
+  \item Built production LLM agents over enterprise APIs using Azure AI Foundry --- system-prompt design, OpenAPI specs adapted into agent tool definitions, and multi-step agent orchestration (ID-chaining across program \(\to\) package \(\to\) evidence sequences); use Claude Code daily.
+  \item Integrated LLMs and models from multiple vendors behind a secure, scalable enterprise platform, adapting external API specs into agent-consumable tools across orchestration layers.
+  \item Partnered directly with customer and partner technical teams to understand needs and shape agentic solutions.
+  \item Mentored engineers and uplifted team capability through pairing, documentation, and code review.
+\end{itemize}
+
+\role{Full Stack Engineer --- Commerce \& Mobility SaaS Platform}{Brick Technology AB}{September 2023 -- May 2025}{Stockholm, Sweden}
+\begin{itemize}
+  \item Shipped customer-facing full-stack features end-to-end --- React / TypeScript frontends and Node.js / Python backend services on AWS.
+  \item Built real-time React dashboards (SSE) streaming live operational data; re-engineered backends for higher concurrency and larger payloads, with strong state management and responsive design.
+  \item Delivered production payment integrations (Stripe, Monri, Flutterwave) with idempotency, retry, and reconciliation.
+  \item Owned an observability platform migration (Datadog \(\to\) Sentry) and a production DynamoDB \(\to\) PostgreSQL migration --- schema modelling, data migration, and cutover.
+  \item Collaborated closely with Product, design, and operations in small senior product teams.
+\end{itemize}
+
+\role{Assistant Consultant --- Enterprise Integration \& Distributed Platforms}{Tata Consultancy Services Ltd}{July 2019 -- September 2023}{India}
+\begin{itemize}
+  \item Designed and delivered backend services, REST APIs, and microservices for large-scale enterprise integration projects.
+  \item Architected ERP integration solutions (SAP, Oracle) --- middleware, data transformation, and API interfaces across enterprise platforms.
+  \item Implemented blockchain applications on Hyperledger Fabric and R3 Corda; filed a patent for a Blockchain-Driven Informer Ecosystem.
+  \item Ran client-facing technical engagements with enterprise stakeholders across integration projects.
+  \item Automated CI/CD pipelines, enforced code review standards, and mentored engineers across delivery teams.
+\end{itemize}
+
+\role{IT Analyst --- Enterprise Platforms \& Integration}{Tata Consultancy Services Ltd}{December 2015 -- July 2019}{India}
+\begin{itemize}
+  \item Developed enterprise backend systems and integration layers connecting Oracle ERP data with downstream operational and reporting systems.
+  \item Collaborated with cross-functional teams in Agile delivery to translate business requirements into scalable solutions.
+\end{itemize}
+
+\role{Senior Software Engineer}{Foray Software Pvt Ltd}{April 2015 -- December 2015}{Hyderabad, India}
+\begin{itemize}
+  \item Developed scalable enterprise applications using API-centric architectures.
+\end{itemize}
+
+\role{Senior Software Engineer}{IGate}{May 2014 -- April 2015}{Hyderabad, India}
+\begin{itemize}
+  \item Delivered enterprise backend services; resolved complex production issues and improved reliability.
+\end{itemize}
+
+\role{Senior Software Engineer}{Tech Mahindra}{April 2011 -- May 2014}{Hyderabad, India}
+\begin{itemize}
+  \item Built enterprise software systems supporting mission-critical applications; designed scalable backend services.
+\end{itemize}
+
+\section*{Education}
+\noindent\textbf{Bachelor of Technology (B.Tech)} \hfill 2006 -- 2010\\
+\textit{Kakatiya Institute of Technology and Sciences}\\[0.4em]
+\noindent\textbf{Post Graduate Diploma in Advanced Computing} \hfill 2010 -- 2011\\
+\textit{Centre for Development of Advanced Computing (CDAC)}
+
+\section*{Certifications}
+\noindent\textbf{R3 Corda Certified Developer} \hfill 2020 -- Present
+
+\section*{Achievements}
+\noindent\textbf{Patent Filed} --- \textit{Blockchain Driven Informer Ecosystem for Public Safety and Crime Prevention}\\
+Filed under Indian jurisdiction during tenure at Tata Consultancy Services.
+
+\section*{Languages}
+\textbf{English} --- Full Professional Proficiency \;|\; \textbf{Hindi} --- Professional Working Proficiency \;|\; \textbf{Telugu} --- Native / Bilingual Proficiency
+
+\end{document}
